@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.cyrklafpat.beginning">
+    package="com.example.cyrklafpat.real_device_app">
+
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -16,9 +18,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Display_Activity_Message"
-            android:parentActivityName=".MainActivity">
-        </activity>
+        <activity
+            android:name=".DisplayMessage"
+            android:parentActivityName=".MainActivity" />
+        <activity android:name=".UserLocation"></activity>
     </application>
 
 </manifest>

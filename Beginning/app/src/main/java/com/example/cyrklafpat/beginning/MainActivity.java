@@ -25,7 +25,14 @@ public class MainActivity extends AppCompatActivity {
         Intent my_intent = new Intent(this, Display_Activity_Message.class);
         EditText text_edit_handle = (EditText) findViewById(R.id.editText);
         String final_message = text_edit_handle.getText().toString();
-        my_intent.putExtra(EXTRA_MESSAGE, final_message);
+
+        /* The putExtra() method adds the EditText's value to the intent. An Intent can carry data
+        types as key-value pairs called extras. Your key is a public constant EXTRA_MESSAGE because
+        the next activity uses the key to retrieve the text value. */
+       my_intent.putExtra(EXTRA_MESSAGE, final_message);
+
+        /* The startActivity() method starts an instance of the Display_Activity_Message
+        specified by the Intent */
         startActivity(my_intent);
     }
 }
