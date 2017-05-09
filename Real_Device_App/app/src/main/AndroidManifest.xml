@@ -18,10 +18,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".DisplayMessage"
             android:parentActivityName=".MainActivity" />
-        <activity android:name=".UserLocation"></activity>
+        <activity
+            android:name=".UserLocation"
+            android:parentActivityName=".MainActivity"/>
+
     </application>
 
 </manifest>
