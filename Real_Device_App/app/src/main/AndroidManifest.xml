@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.cyrklafpat.real_device_app">
 
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
         android:allowBackup="true"
@@ -25,6 +26,11 @@
         <activity
             android:name=".UserLocation"
             android:parentActivityName=".MainActivity"/>
+
+        <service
+            android:name=".FetchAddressIntentService"
+            android:exported="false"/>
+
 
     </application>
 
