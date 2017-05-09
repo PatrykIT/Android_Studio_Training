@@ -54,13 +54,6 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     {
         TextView text_view_handle = (TextView) findViewById(R.id.textView5);
 
-//        try {
-//            Location user_LastLocation = LocationServices.FusedLocationApi.getLastLocation(my_google_api_client);
-//        }
-//        catch(SecurityException exception){
-//            //Let the problem know we do not have permission.
-//        }
-
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED)
         {
