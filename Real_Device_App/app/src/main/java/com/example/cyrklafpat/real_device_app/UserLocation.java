@@ -12,7 +12,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -223,12 +222,12 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         LocationServices.FusedLocationApi.removeLocationUpdates(my_google_api_client, this);
     }
 
-//    public void getAddress() throws IOException
-//    {
-//        Geocoder my_geocoder = new Geocoder(this, Locale.getDefault());
-//        List<Address> addresses = my_geocoder.getFromLocation(user_last_location.getLatitude(),
-//                user_last_location.getLongitude(), 1);
-//    }
+    public void getAddress() throws IOException
+    {
+        Geocoder my_geocoder = new Geocoder(this, Locale.getDefault());
+        List<android.location.Address> addresses = my_geocoder.getFromLocation(user_last_location.getLatitude(),
+                user_last_location.getLongitude(), 1);
+    }
 }
 
 
