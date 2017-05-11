@@ -1,6 +1,9 @@
+package com.example.cyrklafpat.real_device_app;
+
 /**
  * Created by cyrklaf.pat on 5/10/2017.
  */
+
 
 public final class Constants
 {

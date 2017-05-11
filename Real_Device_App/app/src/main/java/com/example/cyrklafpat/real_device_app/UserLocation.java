@@ -5,9 +5,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.os.ResultReceiver;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
@@ -17,7 +19,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.identity.intents.Address;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
@@ -26,20 +27,34 @@ import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.LocationListener;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
-
 
 public class UserLocation extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks, LocationListener
 {
 
-    private GoogleApiClient my_google_api_client;
-    private Location user_last_location;
-    private LocationRequest location_request;
-    private boolean mUpdatePeriodically = true;
-    private TextView text_view_handle;
+    public GoogleApiClient my_google_api_client;
+    public Location user_last_location;
+    public LocationRequest location_request;
+    public TextView text_view_handle;
+    private AddressResultReceiver mResultReceiver;
+
+    class AddressResultReceiver extends ResultReceiver
+    {
+        public AddressResultReceiver(Handler handler)
+        {
+            super(handler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData)
+        {
+            String address_output = resultData.getString(Constants.RESULT_DATA_KEY);
+            text_view_handle.append("\n" + address_output);
+        }
+    }
+
+        public boolean mUpdatePeriodically = true;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -56,7 +71,6 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
                 .build();
 
         text_view_handle = (TextView) findViewById(R.id.textView5);
-
     }
 
     private void updateUI()
@@ -195,6 +209,15 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
             }
         }
 
+        if(Geocoder.isPresent() == false)
+        {
+            text_view_handle.setText("Geocoder is not present!");
+            return;
+        }
+
+        if(my_google_api_client.isConnected() && user_last_location != null)
+            startIntentService();
+
         if(mUpdatePeriodically)
             startLocationUpdates();
 
@@ -222,12 +245,16 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         LocationServices.FusedLocationApi.removeLocationUpdates(my_google_api_client, this);
     }
 
-    public void getAddress() throws IOException
+    protected void startIntentService()
     {
-        Geocoder my_geocoder = new Geocoder(this, Locale.getDefault());
-        List<android.location.Address> addresses = my_geocoder.getFromLocation(user_last_location.getLatitude(),
-                user_last_location.getLongitude(), 1);
+        Intent intent = new Intent(this, FetchAddressIntentService.class);
+        intent.putExtra(Constants.RECEIVER, mResultReceiver);
+        intent.putExtra(Constants.LOCATION_DATA_EXTRA, user_last_location);
+        startService(intent);
     }
+
 }
+
+
 
 
