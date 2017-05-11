@@ -53,7 +53,6 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         {
             String address_output = resultData.getString(Constants.RESULT_DATA_KEY);
             text_view_handle.append("\n" + address_output);
-            text_view_handle.append("I AM HERE 222!");
         }
     }
 
@@ -180,14 +179,16 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
                             break;
                         case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                             //Location settings are not satisfied, but this can be fixed by showing the user a dialog:
-//                            try
-//                            {
-//                                status.startResolutionForResult(OuterClass.this, REQUEST_CHECK_SETTINGS);
-//                            }
-//                            catch(IntentSender.SendIntentException exception)
-//                            {
-//                                //Handle error.
-//                            }
+                            /*
+                            try
+                            {
+                                status.startResolutionForResult(OuterClass.this, REQUEST_CHECK_SETTINGS);
+                            }
+                            catch(IntentSender.SendIntentException exception)
+                            {
+                                //Handle error.
+                            }
+                            */
                             break;
 
                         case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:

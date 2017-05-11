@@ -23,22 +23,18 @@ import static android.content.ContentValues.TAG;
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
  * <p>
- * TODO: Customize class - update intent actions, extra parameters and static
- * helper methods.
  */
 public class FetchAddressIntentService extends IntentService {
     // TODO: Rename actions, choose action names that describe tasks that this
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
     private static final String ACTION_FOO = "com.example.cyrklafpat.real_device_app.action.FOO";
-    private static final String ACTION_BAZ = "com.example.cyrklafpat.real_device_app.action.BAZ";
 
     // TODO: Rename parameters
     private static final String EXTRA_PARAM1 = "com.example.cyrklafpat.real_device_app.extra.PARAM1";
     private static final String EXTRA_PARAM2 = "com.example.cyrklafpat.real_device_app.extra.PARAM2";
 
-
-    protected ResultReceiver mReceiver;
-
+    /* Generic interface for receiving a callback result from someone. */
+    protected ResultReceiver resultReceiver;
 
     public FetchAddressIntentService() {
         super("FetchAddressIntentService");
@@ -51,24 +47,10 @@ public class FetchAddressIntentService extends IntentService {
      * @see IntentService
      */
     // TODO: Customize helper method
-    public static void startActionFoo(Context context, String param1, String param2) {
+    public static void startActionFoo(Context context, String param1, String param2)
+    {
         Intent intent = new Intent(context, FetchAddressIntentService.class);
         intent.setAction(ACTION_FOO);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
-        context.startService(intent);
-    }
-
-    /**
-     * Starts this service to perform action Baz with the given parameters. If
-     * the service is already performing a task this action will be queued.
-     *
-     * @see IntentService
-     */
-    // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
-        Intent intent = new Intent(context, FetchAddressIntentService.class);
-        intent.setAction(ACTION_BAZ);
         intent.putExtra(EXTRA_PARAM1, param1);
         intent.putExtra(EXTRA_PARAM2, param2);
         context.startService(intent);
@@ -79,9 +61,11 @@ public class FetchAddressIntentService extends IntentService {
     {
 
         Geocoder my_geocoder = new Geocoder(this, Locale.getDefault());
+
+        /* Get the receiver passed as extra. */
+        resultReceiver = intent.getParcelableExtra(Constants.RECEIVER);
         /* Get the location passed to this service through an extra. */
         Location location = intent.getParcelableExtra(Constants.LOCATION_DATA_EXTRA);
-        mReceiver = intent.getParcelableExtra(Constants.RECEIVER);
 
 
         List<Address> addresses = null;
@@ -92,6 +76,7 @@ public class FetchAddressIntentService extends IntentService {
         catch(IOException ioException)
         {
             Log.e(TAG, ioException.getMessage());
+            deliverResultToReceiver(Constants.FAILURE_RESULT, ioException.getMessage());
         }
 
         if(addresses == null || addresses.size() == 0)
@@ -102,7 +87,7 @@ public class FetchAddressIntentService extends IntentService {
         else
         {
             Address address = addresses.get(0);
-            ArrayList<String> addressFragments = new ArrayList<String>();
+            ArrayList<String> addressFragments = new ArrayList<>();
 
             for(int i = 0; i <= address.getMaxAddressLineIndex(); i++)
             {
@@ -117,7 +102,7 @@ public class FetchAddressIntentService extends IntentService {
     {
         Bundle bundle = new Bundle();
         bundle.putString(Constants.RESULT_DATA_KEY, message);
-        mReceiver.send(resultCode, bundle);
+        resultReceiver.send(resultCode, bundle);
     }
 
 
