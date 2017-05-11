@@ -3,6 +3,7 @@ package com.example.cyrklafpat.real_device_app;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Handler;
@@ -28,6 +29,12 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.LocationListener;
 
 
+
+/** To use the Google’s Location Services, your app needs to connect to the GooglePlayServicesClient.
+ *  To connect to the client, your activity (or fragment etc) needs to implement:
+ *  GooglePlayServicesClient.ConnectionCallbacks and
+ *  GooglePlayServicesClient.OnConnectionFailedListener interfaces. */
+
 public class UserLocation extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks, LocationListener
 {
@@ -52,7 +59,8 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         protected void onReceiveResult(int resultCode, Bundle resultData)
         {
             String address_output = resultData.getString(Constants.RESULT_DATA_KEY);
-            text_view_handle.append("\n" + address_output);
+            text_view_handle.setTextColor(Color.RED);
+            text_view_handle.append("\nYour current location is: " + address_output);
         }
     }
 
@@ -62,6 +70,11 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_location);
+
+        /* A Handler object registers itself with the thread in which it is created. It provides a channel
+        to send data to this thread.
+        For example, if you create a new Handler instance in the onCreate() method of your activity,
+        it can be used to post data to the main thread. */
         mResultReceiver = new AddressResultReceiver(new Handler());
 
         Intent intent_received = getIntent();
@@ -117,6 +130,9 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
+    /** You have to register Location Listener for your Location Manager, then only onLocationChanged()
+     * will be called according the settings you supplied while registering location listener.
+     * http://stackoverflow.com/questions/8600688/android-when-exactly-is-onlocationchanged-called */
     @Override
     public void onLocationChanged(Location location)
     {
@@ -199,12 +215,14 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
                 }
             });
 
+            /* Fused Location Provider automatically chooses what underlying provider to use
+            (GPS or Network[wi-fi or cell tower]), based on accuracy, battery usage, etc.
+            It is fast because you get location from a system-wide service that keeps updating it.
+            Thus it is better alternative then Androids Location API.
+            You can also use more advanced features such as geofencing.*/
             user_last_location = LocationServices.FusedLocationApi.getLastLocation(my_google_api_client);
             if (user_last_location != null)
             {
-                text_view_handle.setText(String.valueOf(user_last_location.getLatitude()));
-                text_view_handle.append("\n");
-                text_view_handle.append(String.valueOf(user_last_location.getLongitude()));
                 if(user_last_location.hasAltitude())
                 {
                     text_view_handle.append("\n");
@@ -254,6 +272,9 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         Intent intent = new Intent(this, FetchAddressIntentService.class);
         intent.putExtra(Constants.RECEIVER, mResultReceiver);
         intent.putExtra(Constants.LOCATION_DATA_EXTRA, user_last_location);
+
+        Bundle bundle = new Bundle();
+        //TODO: Can I put objects in Bundle instead of the Intent? ;)
         startService(intent);
     }
 

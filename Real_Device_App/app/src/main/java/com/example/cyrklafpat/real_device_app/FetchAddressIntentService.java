@@ -56,10 +56,12 @@ public class FetchAddressIntentService extends IntentService {
         context.startService(intent);
     }
 
+    /** The IntentService is triggered using an Intent, it spawns a new worker thread and the method onHandleIntent() is called on
+     * this thread. */
+
     @Override
     protected void onHandleIntent(Intent intent)
     {
-
         Geocoder my_geocoder = new Geocoder(this, Locale.getDefault());
 
         /* Get the receiver passed as extra. */
@@ -93,6 +95,7 @@ public class FetchAddressIntentService extends IntentService {
             {
                 addressFragments.add(address.getAddressLine(i));
             }
+
             deliverResultToReceiver(Constants.SUCCESS_RESULT,
                     TextUtils.join(System.getProperty("line.separator"), addressFragments));
         }
@@ -100,6 +103,14 @@ public class FetchAddressIntentService extends IntentService {
 
     private void deliverResultToReceiver(int resultCode, String message)
     {
+        /* Bundles are generally used for passing data between various Android activities.
+
+        Bundles can be used to send arbitrary data from one activity to another by way of Intents.
+        When you broadcast an Intent, interested Activities (and other BroadcastRecievers) will be notified of this.
+        An intent can contain a Bundle so that you can send extra data along with the Intent.
+
+        A Bundle is very much like a Java Map object that maps String keys to values. */
+
         Bundle bundle = new Bundle();
         bundle.putString(Constants.RESULT_DATA_KEY, message);
         resultReceiver.send(resultCode, bundle);
@@ -115,12 +126,24 @@ public class FetchAddressIntentService extends IntentService {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
-    /**
-     * Handle action Baz in the provided background thread with the provided
-     * parameters.
-     */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
 }
+
+
+/** Service vs IntentService:
+ *
+ *      The Service is triggered by calling method startService().
+ *      The IntentService is triggered using an Intent, it spawns a new worker thread and the method onHandleIntent()
+ *      is called on this thread.
+ *
+ *      The Service runs in background but it runs on the Main Thread of the application.
+ *      The IntentService runs on a separate worker thread.
+ *
+ *      The Service may block the Main Thread of the application.
+ *      The IntentService cannot run tasks in parallel. Hence all the consecutive intents will go into the message queue for
+ *      the worker thread and will execute sequentially.
+ *
+ *      In Service, it is your responsibility to stop the service when its work is done, by calling stopSelf() or stopService().
+ *      The IntentService stops the service after all start requests have been handled, so you never have to call stopSelf()
+ *
+ *
+ * */
