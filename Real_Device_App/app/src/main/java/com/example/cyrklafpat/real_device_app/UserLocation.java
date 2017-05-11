@@ -36,10 +36,13 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     public Location user_last_location;
     public LocationRequest location_request;
     public TextView text_view_handle;
+    public boolean mUpdatePeriodically = true;
+
     private AddressResultReceiver mResultReceiver;
 
     class AddressResultReceiver extends ResultReceiver
     {
+
         public AddressResultReceiver(Handler handler)
         {
             super(handler);
@@ -50,10 +53,9 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         {
             String address_output = resultData.getString(Constants.RESULT_DATA_KEY);
             text_view_handle.append("\n" + address_output);
+            text_view_handle.append("I AM HERE 222!");
         }
     }
-
-        public boolean mUpdatePeriodically = true;
 
 
     @Override
@@ -61,6 +63,7 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_location);
+        mResultReceiver = new AddressResultReceiver(new Handler());
 
         Intent intent_received = getIntent();
 

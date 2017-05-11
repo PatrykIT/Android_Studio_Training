@@ -81,6 +81,8 @@ public class FetchAddressIntentService extends IntentService {
         Geocoder my_geocoder = new Geocoder(this, Locale.getDefault());
         /* Get the location passed to this service through an extra. */
         Location location = intent.getParcelableExtra(Constants.LOCATION_DATA_EXTRA);
+        mReceiver = intent.getParcelableExtra(Constants.RECEIVER);
+
 
         List<Address> addresses = null;
         try
