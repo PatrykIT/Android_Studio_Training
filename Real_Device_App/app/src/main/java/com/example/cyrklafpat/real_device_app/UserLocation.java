@@ -74,7 +74,9 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         /* A Handler object registers itself with the thread in which it is created. It provides a channel
         to send data to this thread.
         For example, if you create a new Handler instance in the onCreate() method of your activity,
-        it can be used to post data to the main thread. */
+        it can be used to post data to the main thread.
+
+        To move data from a background thread to the UI thread, use a Handler that's running on the UI thread.*/
         mResultReceiver = new AddressResultReceiver(new Handler());
 
         Intent intent_received = getIntent();
