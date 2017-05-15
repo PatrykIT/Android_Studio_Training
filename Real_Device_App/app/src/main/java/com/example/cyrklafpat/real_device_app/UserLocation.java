@@ -1,6 +1,7 @@
 package com.example.cyrklafpat.real_device_app;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -13,7 +14,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.os.ResultReceiver;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -58,6 +61,14 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData)
         {
+            Context app_context = getApplicationContext();
+            CharSequence text = "Received location.";
+            int duration = Toast.LENGTH_SHORT;
+
+            Toast toast_notifier = Toast.makeText(app_context, text, duration);
+            //toast_notifier.setGravity(Gravity.TOP|Gravity.CENTER, 0 , 0);
+            toast_notifier.show();
+
             String address_output = resultData.getString(Constants.RESULT_DATA_KEY);
             text_view_handle.setTextColor(Color.RED);
             text_view_handle.append("\nYour current location is: " + address_output);
