@@ -34,7 +34,7 @@ public class FetchAddressIntentService extends IntentService {
     private static final String EXTRA_PARAM2 = "com.example.cyrklafpat.real_device_app.extra.PARAM2";
 
     /* Generic interface for receiving a callback result from someone. */
-    protected ResultReceiver resultReceiver;
+    protected ResultReceiver result_receiver;
 
     public FetchAddressIntentService()
     {
@@ -66,7 +66,7 @@ public class FetchAddressIntentService extends IntentService {
         Geocoder my_geocoder = new Geocoder(this, Locale.getDefault());
 
         /* Get the receiver passed as extra. */
-        resultReceiver = intent.getParcelableExtra(Constants.RECEIVER);
+        result_receiver = intent.getParcelableExtra(Constants.RECEIVER);
         /* Get the location passed to this service through an extra. */
         Location location = intent.getParcelableExtra(Constants.LOCATION_DATA_EXTRA);
 
@@ -113,7 +113,7 @@ public class FetchAddressIntentService extends IntentService {
 
         Bundle bundle = new Bundle();
         bundle.putString(Constants.RESULT_DATA_KEY, message);
-        resultReceiver.send(resultCode, bundle);
+        result_receiver.send(resultCode, bundle);
     }
 
 

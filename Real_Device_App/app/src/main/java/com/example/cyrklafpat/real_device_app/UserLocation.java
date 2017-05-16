@@ -1,6 +1,5 @@
 package com.example.cyrklafpat.real_device_app;
 
-import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -9,12 +8,10 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.os.ResultReceiver;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,7 +45,7 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     public TextView text_view_handle;
     public boolean mUpdatePeriodically = true;
 
-    private AddressResultReceiver mResultReceiver;
+    private AddressResultReceiver address_result_receiver;
 
     class AddressResultReceiver extends ResultReceiver
     {
@@ -79,8 +76,14 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
 
             if(resultCode == Constants.SUCCESS_RESULT)
             {
+                text_view_handle.setText("");
                 text_view_handle.setTextColor(Color.BLUE);
-                text_view_handle.append("\nYour current location is: " + address_output);
+
+                text_view_handle.append("\nYour current location is:\n " + address_output);
+                text_view_handle.append("\nCoordinates: \n " + String.valueOf(user_last_location.getLatitude())
+                        + "\n" + String.valueOf(user_last_location.getLongitude()));
+
+                //TODO: "Your current location" and "Coordinates" should be in different colour.
             }
             else if(resultCode == Constants.FAILURE_RESULT)
             {
@@ -103,7 +106,7 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         it can be used to post data to the main thread.
 
         To move data from a background thread to the UI thread, use a Handler that's running on the UI thread.*/
-        mResultReceiver = new AddressResultReceiver(new Handler());
+        address_result_receiver = new AddressResultReceiver(new Handler());
 
         Intent intent_received = getIntent();
 
@@ -116,12 +119,6 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         text_view_handle = (TextView) findViewById(R.id.textView5);
     }
 
-    private void updateUI()
-    {
-        text_view_handle.setText(String.valueOf(user_last_location.getLatitude()));
-        text_view_handle.append("\n");
-        text_view_handle.append(String.valueOf(user_last_location.getLongitude()));
-    }
 
     @Override
     protected void onStart()
@@ -158,15 +155,6 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
-    /** You have to register Location Listener for your Location Manager, then only onLocationChanged()
-     * will be called according the settings you supplied while registering location listener.
-     * http://stackoverflow.com/questions/8600688/android-when-exactly-is-onlocationchanged-called */
-    @Override
-    public void onLocationChanged(Location location)
-    {
-        user_last_location = location;
-        updateUI();
-    }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult var1)
@@ -268,8 +256,8 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         if(my_google_api_client.isConnected() && user_last_location != null)
             startIntentService();
 
-        //if(mUpdatePeriodically)
-            //startLocationUpdates();
+        if(mUpdatePeriodically)
+            startLocationUpdates();
 
         else
         {
@@ -291,6 +279,24 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
+    /** You have to register Location Listener for your Location Manager, then only onLocationChanged()
+     * will be called according the settings you supplied while registering location listener.
+     * http://stackoverflow.com/questions/8600688/android-when-exactly-is-onlocationchanged-called */
+    @Override
+    public void onLocationChanged(Location location)
+    {
+        user_last_location = location;
+        startIntentService();
+        //updateUI();
+    }
+
+    private void updateUI()
+    {
+        text_view_handle.setText(String.valueOf(user_last_location.getLatitude()));
+        text_view_handle.append("\n");
+        text_view_handle.append(String.valueOf(user_last_location.getLongitude()));
+    }
+
     protected void stopLocationUpdates()
     {
         LocationServices.FusedLocationApi.removeLocationUpdates(my_google_api_client, this);
@@ -299,11 +305,9 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     protected void startIntentService()
     {
         Intent intent = new Intent(this, FetchAddressIntentService.class);
-        intent.putExtra(Constants.RECEIVER, mResultReceiver);
+        intent.putExtra(Constants.RECEIVER, address_result_receiver);
         intent.putExtra(Constants.LOCATION_DATA_EXTRA, user_last_location);
 
-        Bundle bundle = new Bundle();
-        //TODO: Can I put objects in Bundle instead of the Intent? ;)
         startService(intent);
     }
 
