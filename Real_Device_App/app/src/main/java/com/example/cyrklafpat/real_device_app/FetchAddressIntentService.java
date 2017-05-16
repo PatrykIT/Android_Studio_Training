@@ -36,7 +36,8 @@ public class FetchAddressIntentService extends IntentService {
     /* Generic interface for receiving a callback result from someone. */
     protected ResultReceiver resultReceiver;
 
-    public FetchAddressIntentService() {
+    public FetchAddressIntentService()
+    {
         super("FetchAddressIntentService");
     }
 
@@ -56,8 +57,8 @@ public class FetchAddressIntentService extends IntentService {
         context.startService(intent);
     }
 
-    /** The IntentService is triggered using an Intent, it spawns a new worker thread and the method onHandleIntent() is called on
-     * this thread. */
+    /** The IntentService is triggered using an Intent, it spawns a new worker thread and the method
+     * onHandleIntent() is called on this thread. */
 
     @Override
     protected void onHandleIntent(Intent intent)
@@ -68,7 +69,6 @@ public class FetchAddressIntentService extends IntentService {
         resultReceiver = intent.getParcelableExtra(Constants.RECEIVER);
         /* Get the location passed to this service through an extra. */
         Location location = intent.getParcelableExtra(Constants.LOCATION_DATA_EXTRA);
-
 
         List<Address> addresses = null;
         try

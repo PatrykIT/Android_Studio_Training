@@ -61,17 +61,32 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         @Override
         protected void onReceiveResult(int resultCode, Bundle resultData)
         {
+            /* Since many contexts are bound to a limited-lifetime object such as an Activity,
+            there needs to be a way to get a longer-lived context, for purposes such as registering
+            for future notifications. That is achieved by Context.getApplicationContext().
+
+            Use this instead of the current Activity context if you need a context tied to the
+            lifecycle of the entire application, not just the current Activity.*/
             Context app_context = getApplicationContext();
+
             CharSequence text = "Received location.";
             int duration = Toast.LENGTH_SHORT;
 
             Toast toast_notifier = Toast.makeText(app_context, text, duration);
-            //toast_notifier.setGravity(Gravity.TOP|Gravity.CENTER, 0 , 0);
             toast_notifier.show();
 
             String address_output = resultData.getString(Constants.RESULT_DATA_KEY);
-            text_view_handle.setTextColor(Color.RED);
-            text_view_handle.append("\nYour current location is: " + address_output);
+
+            if(resultCode == Constants.SUCCESS_RESULT)
+            {
+                text_view_handle.setTextColor(Color.BLUE);
+                text_view_handle.append("\nYour current location is: " + address_output);
+            }
+            else if(resultCode == Constants.FAILURE_RESULT)
+            {
+                text_view_handle.setTextColor(Color.RED);
+                text_view_handle.append("\nFailure: " + address_output);
+            }
         }
     }
 
@@ -239,7 +254,7 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
                 if(user_last_location.hasAltitude())
                 {
                     text_view_handle.append("\n");
-                    text_view_handle.append(String.valueOf(user_last_location.getAltitude()));
+                    text_view_handle.append("Altitude: " + String.valueOf(user_last_location.getAltitude()));
                 }
             }
         }
@@ -253,8 +268,8 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         if(my_google_api_client.isConnected() && user_last_location != null)
             startIntentService();
 
-        if(mUpdatePeriodically)
-            startLocationUpdates();
+        //if(mUpdatePeriodically)
+            //startLocationUpdates();
 
         else
         {
@@ -265,6 +280,7 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
 
     protected void startLocationUpdates()
     {
+        /* Check for permissions */
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
