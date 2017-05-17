@@ -12,6 +12,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.os.ResultReceiver;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -79,11 +82,18 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
                 text_view_handle.setText("");
                 text_view_handle.setTextColor(Color.BLUE);
 
-                text_view_handle.append("\nYour current location is:\n " + address_output);
+                String welcome_string = "\nYour current location is:\n";
+                String location_string = welcome_string + address_output;
+
+                /* Change colour of the address. */
+                Spannable my_spannable = new SpannableString(location_string);
+                my_spannable.setSpan(new ForegroundColorSpan(Color.MAGENTA), welcome_string.length(),
+                        location_string.length(), 0);
+
+                text_view_handle.append(my_spannable);
+
                 text_view_handle.append("\nCoordinates: \n " + String.valueOf(user_last_location.getLatitude())
                         + "\n" + String.valueOf(user_last_location.getLongitude()));
-
-                //TODO: "Your current location" and "Coordinates" should be in different colour.
             }
             else if(resultCode == Constants.FAILURE_RESULT)
             {
