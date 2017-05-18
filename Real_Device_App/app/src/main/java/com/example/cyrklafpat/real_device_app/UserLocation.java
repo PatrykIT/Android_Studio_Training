@@ -1,5 +1,6 @@
 package com.example.cyrklafpat.real_device_app;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -15,6 +16,7 @@ import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +25,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
@@ -30,7 +34,13 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 
+import java.util.ArrayList;
 
 
 /** To use the Google’s Location Services, your app needs to connect to the GooglePlayServicesClient.
@@ -39,8 +49,9 @@ import com.google.android.gms.location.LocationListener;
  *  GooglePlayServicesClient.OnConnectionFailedListener interfaces. */
 
 public class UserLocation extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
-        GoogleApiClient.ConnectionCallbacks, LocationListener
+        GoogleApiClient.ConnectionCallbacks, LocationListener, ResultCallback<Status>
 {
+    private static final String TAG = UserLocation.class.getSimpleName();
 
     public GoogleApiClient my_google_api_client;
     public Location user_last_location;
@@ -127,6 +138,7 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
                 .build();
 
         text_view_handle = (TextView) findViewById(R.id.textView5);
+
     }
 
 
@@ -176,6 +188,36 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     public void onConnectionSuspended(int i)
     {
         // We are not connected anymore!
+    }
+
+    private static final String GEOFENCE_ID = "My Geofence";
+    private static final float GEOFENCE_RADIUS = 500.0f; // in meters
+    private static final long GEO_DURATION_MILISECONDS = 60 * 60 * 1000;
+
+    public void startGeofence()
+    {
+        Geofence geofence = new Geofence.Builder()
+                .setRequestId(GEOFENCE_ID)
+                .setCircularRegion(user_last_location.getLatitude(),  user_last_location.getLongitude(), GEOFENCE_RADIUS)
+                .setExpirationDuration(GEO_DURATION_MILISECONDS)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .build();
+
+        geofence_list.add(geofence);
+
+
+        geofencing_request = getGeofencingRequest(geofence);
+    }
+
+    private GeofencingRequest getGeofencingRequest(Geofence geofence)
+    {
+        GeofencingRequest.Builder geofencing_request = new GeofencingRequest.Builder();
+        /* Specifying INITIAL_TRIGGER_ENTER tells Location services that GEOFENCE_TRANSITION_ENTER should be triggered
+        if the the device is already inside the geofence. */
+        geofencing_request.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        geofencing_request.addGeofence(geofence);
+
+        return geofencing_request.build();
     }
 
     @Override
@@ -297,15 +339,8 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     {
         user_last_location = location;
         startIntentService();
-        //updateUI();
     }
 
-    private void updateUI()
-    {
-        text_view_handle.setText(String.valueOf(user_last_location.getLatitude()));
-        text_view_handle.append("\n");
-        text_view_handle.append(String.valueOf(user_last_location.getLongitude()));
-    }
 
     protected void stopLocationUpdates()
     {
@@ -321,6 +356,35 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         startService(intent);
     }
 
+    /* -------------------------- -------------------------- GEOFENCING --------------------------  -------------------------- */
+
+    /** Used when requesting to add or remove geofences. */
+    private PendingIntent geofence_pending_intent;
+
+    /** The GeofencingRequest class receives the geofences that should be monitored. */
+    private GeofencingRequest geofencing_request;
+
+    /** List of our geofences */
+    protected ArrayList<Geofence> geofence_list;
+
+    /** Indicator wheter geofences were added. TODO: Can it be done withou bool? List surely has a method .empty() ;p */
+    private boolean geofences_added;
+
+    /** Buttons for starting the process of adding / removing geofences. */
+    private Button add_geofences_button;
+    private Button remove_geofences_button;
+
+
+    @Override
+    public void onResult(@NonNull Status var1)
+    {
+
+    }
+
+    private PendingIntent getGeofencePendingIntent()
+    {
+
+    }
 }
 
 

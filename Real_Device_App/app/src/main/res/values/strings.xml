@@ -8,4 +8,6 @@
     <string name="Fragment_Welcome">Welcome to Fragment window!</string>
     <string name="Location_1">Location 1</string>
     <string name="Location_Button">Location Info</string>
+    <string name="Add_Geofence_Button">Add Geofence</string>
+    <string name="Remove_Geofence_Button">Remove Geofence</string>
 </resources>
