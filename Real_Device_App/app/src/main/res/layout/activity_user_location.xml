@@ -31,7 +31,7 @@
             android:orientation="vertical">
 
             <Button
-                android:id="@+id/button3"
+                android:id="@+id/Add_Geofence_Button_ID"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -42,7 +42,7 @@
                 tools:layout_constraintTop_creator="1"/>
 
             <Button
-                android:id="@+id/button4"
+                android:id="@+id/Remove_Geofence_Button_ID"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
