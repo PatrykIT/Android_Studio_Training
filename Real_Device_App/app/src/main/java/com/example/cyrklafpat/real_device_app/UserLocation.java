@@ -3,6 +3,7 @@ package com.example.cyrklafpat.real_device_app;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Geocoder;
@@ -16,6 +17,7 @@ import android.os.Bundle;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -137,7 +139,26 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
                 .addApi(LocationServices.API)
                 .build();
 
+        /* Get UI widgets */
         text_view_handle = (TextView) findViewById(R.id.textView5);
+        add_geofences_button = (Button) findViewById(R.id.Add_Geofence_Button_ID);
+        remove_geofences_button = (Button) findViewById(R.id.Remove_Geofence_Button_ID);
+
+        geofence_list = new ArrayList<Geofence>();
+
+        shared_preferences = getSharedPreferences(Constants.SHARED_PREFERENCES_NAME, MODE_PRIVATE);
+        /* The SharedPreferences class provides a general framework that allows you to save and retrieve
+        persistent key-value pairs of primitive data types.
+        It retrieves and holds the contents of the preferences file 'name', returning a SharedPreferences through which
+        you can retrieve and modify its values.
+
+
+
+        Arg_1_String - The 'name' parameter is the base name (without file extension) of an XML preferences file located
+        in the private storage of the app.
+        If a preferences file by this name does not exist, it will be created when you retrieve an editor
+        (SharedPreferences.edit()) and then commit changes (Editor.commit())*/
+
 
     }
 
@@ -190,35 +211,8 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         // We are not connected anymore!
     }
 
-    private static final String GEOFENCE_ID = "My Geofence";
-    private static final float GEOFENCE_RADIUS = 500.0f; // in meters
-    private static final long GEO_DURATION_MILISECONDS = 60 * 60 * 1000;
-
-    public void startGeofence()
-    {
-        Geofence geofence = new Geofence.Builder()
-                .setRequestId(GEOFENCE_ID)
-                .setCircularRegion(user_last_location.getLatitude(),  user_last_location.getLongitude(), GEOFENCE_RADIUS)
-                .setExpirationDuration(GEO_DURATION_MILISECONDS)
-                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
-                .build();
-
-        geofence_list.add(geofence);
 
 
-        geofencing_request = getGeofencingRequest(geofence);
-    }
-
-    private GeofencingRequest getGeofencingRequest(Geofence geofence)
-    {
-        GeofencingRequest.Builder geofencing_request = new GeofencingRequest.Builder();
-        /* Specifying INITIAL_TRIGGER_ENTER tells Location services that GEOFENCE_TRANSITION_ENTER should be triggered
-        if the the device is already inside the geofence. */
-        geofencing_request.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
-        geofencing_request.addGeofence(geofence);
-
-        return geofencing_request.build();
-    }
 
     @Override
     public void onConnected(Bundle var1)
@@ -359,7 +353,7 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     /* -------------------------- -------------------------- GEOFENCING --------------------------  -------------------------- */
 
     /** Used when requesting to add or remove geofences. */
-    private PendingIntent geofence_pending_intent;
+    private PendingIntent geofence_pending_intent = null;
 
     /** The GeofencingRequest class receives the geofences that should be monitored. */
     private GeofencingRequest geofencing_request;
@@ -374,6 +368,10 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     private Button add_geofences_button;
     private Button remove_geofences_button;
 
+    /** Used to persist application state about whether geofences were added. */
+    private SharedPreferences shared_preferences;
+
+
 
     @Override
     public void onResult(@NonNull Status var1)
@@ -383,9 +381,67 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
 
     private PendingIntent getGeofencePendingIntent()
     {
+        if(geofence_pending_intent != null)
+            return geofence_pending_intent;
 
+        Intent intent = new Intent(this, GeofenceLocatorService.class);
+
+        /* We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+         * addGeofences() and removeGeofences() */
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    public void startGeofence()
+    {
+        Geofence geofence = new Geofence.Builder()
+                /* Request ID is a string to identify this geofence inside your application. */
+                .setRequestId(Constants.GEOFENCE_ID)
+                .setCircularRegion(user_last_location.getLatitude(),  user_last_location.getLongitude(),
+                        Constants.GEOFENCE_RADIUS_METERS)
+                .setExpirationDuration(Constants.GEOFENCE_DURATION_MILISECONDS)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER | Geofence.GEOFENCE_TRANSITION_EXIT)
+                .build();
+
+        geofence_list.add(geofence);
+
+
+        geofencing_request = getGeofencingRequest();
+    }
+
+    private GeofencingRequest getGeofencingRequest()
+    {
+        GeofencingRequest.Builder geofencing_request = new GeofencingRequest.Builder();
+        /* Specifying INITIAL_TRIGGER_ENTER tells Location services that GEOFENCE_TRANSITION_ENTER should be triggered
+        if the the device is already inside the geofence. */
+        geofencing_request.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+        geofencing_request.addGeofences(geofence_list);
+
+        return geofencing_request.build();
+    }
+
+    public void addGeofences(View view)
+    {
+        if(my_google_api_client.isConnected() == false)
+        {
+            Toast.makeText(this, "Not connected Google API!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try
+        {
+            LocationServices.GeofencingApi.addGeofences(my_google_api_client, getGeofencingRequest(),
+                    getGeofencePendingIntent()).setResultCallback(this);
+        }
     }
 }
+
+
+
+
+
+
+
+
 
 
 
