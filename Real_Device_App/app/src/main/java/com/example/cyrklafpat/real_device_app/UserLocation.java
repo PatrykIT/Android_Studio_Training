@@ -271,6 +271,8 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
             }
 
             //return; //TODO: Should it be here? I think if user allows permissions, we can go on.
+
+            //TODO: I should check if permissions were granted. If so, then I continue with the program. Else I return;
         }
              /* TODO: Consider calling ActivityCompat#requestPermissions
              to request the missing permissions, and then overriding
@@ -527,6 +529,11 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
     {
+        /* TODO: Why this return void, not bool?!?! Should I add all logic here?
+        I would like to return a bool so my code could go on depending if it was permissions were granted or not.
+        What I think would be best, is to have a boolean value for every permission (default it would be set to false)
+        If permissions were approved, then I would set it here to true, and later check those booleans in my application. */
+
         switch (requestCode)
         {
             case REQUEST_CODE_ASK_PERMISSIONS:
