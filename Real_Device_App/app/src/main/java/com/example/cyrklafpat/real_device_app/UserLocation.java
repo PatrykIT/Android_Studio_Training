@@ -4,7 +4,6 @@ import android.Manifest;
 
 import android.app.PendingIntent;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -16,7 +15,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.os.ResultReceiver;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Spannable;
@@ -41,16 +39,8 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 
 import java.util.ArrayList;
-import java.util.jar.*;
-
-import javax.xml.datatype.Duration;
 
 
 /** To use the Google’s Location Services, your app needs to connect to the GooglePlayServicesClient.
@@ -165,8 +155,11 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         Arg_1_String - The 'name' parameter is the base name (without file extension) of an XML preferences file located
         in the private storage of the app.
         If a preferences file by this name does not exist, it will be created when you retrieve an editor
-        (SharedPreferences.edit()) and then commit changes (Editor.commit())*/
+        (SharedPreferences.edit()) and then commit changes (Editor.commit()) */
 
+        geofences_added = shared_preferences.getBoolean(Constants.GEOFENCES_ADDED_KEY, false);
+
+        addGeofencesToList();
 
     }
 
@@ -225,60 +218,11 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
     @Override
     public void onConnected(Bundle var1)
     {
-//        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-//                == PackageManager.PERMISSION_GRANTED &&
-//                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-//                == PackageManager.PERMISSION_GRANTED)
-//        {
-
-        /* Do not use Activity.checkSelfPermission, because it works only on API 23 and above. */
-        int has_location_permissions = ContextCompat.checkSelfPermission(UserLocation.this,
-                Manifest.permission.ACCESS_FINE_LOCATION);
-
-        if(has_location_permissions != PackageManager.PERMISSION_GRANTED)
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED)
         {
-            /* If User denied a permission, in the second launch, user will get a "Never ask again" option to prevent
-            application from asking this permission in the future. This case has to be handled as well.
-
-            Before calling requestPermissions, we need to check whether we should ask for permissions or show dialog like:
-            "You need to allow access to [PERMISSION] in settings."
-
-            This is done via shouldShowRequestPermissionRationale(). Note that it will return false if API is < 23 */
-            if(ActivityCompat.shouldShowRequestPermissionRationale(UserLocation.this,
-                    Manifest.permission.ACCESS_FINE_LOCATION))
-            {
-                ActivityCompat.requestPermissions(UserLocation.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        REQUEST_CODE_ASK_PERMISSIONS);
-            }
-            else
-            {
-                DialogInterface.OnClickListener ok_listener = new DialogInterface.OnClickListener()
-                {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which)
-                    {
-                        Toast.makeText(getApplicationContext(), "ok listener called", Toast.LENGTH_SHORT).show();
-                        ActivityCompat.requestPermissions(UserLocation.this,
-                                new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_ASK_PERMISSIONS);
-                    }
-                };
-
-                String message = "You need to allow access to location.";
-                new AlertDialog.Builder(UserLocation.this).setMessage(message).setPositiveButton("OK", ok_listener)
-                        .setNegativeButton("Cancel", null).create().show();
-
-                //return; //TODO: I think we should return only if user clicks 'Cancel'
-            }
-
-            //return; //TODO: Should it be here? I think if user allows permissions, we can go on.
-
-            //TODO: I should check if permissions were granted. If so, then I continue with the program. Else I return;
-        }
-             /* TODO: Consider calling ActivityCompat#requestPermissions
-             to request the missing permissions, and then overriding
-             public void onRequestPermissionsResult(...)
-             to handle the case where the user grants the permission. */
-
             /* Before requesting location updates, your app must connect to location services and make a location request. */
             location_request = new LocationRequest();
             location_request.setInterval(10000);
@@ -343,7 +287,7 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
                     text_view_handle.append("Altitude: " + String.valueOf(user_last_location.getAltitude()));
                 }
             }
-        //}
+        }
 
         if(Geocoder.isPresent() == false)
         {
@@ -430,11 +374,29 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
 
 
     @Override
-    public void onResult(@NonNull Status var1)
+    public void onResult(@NonNull Status operation_status)
     {
+        if(operation_status.isSuccess() == false)
+        {
+            Toast.makeText(this, "Operation Status is NOT successful.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
+        geofences_added = !geofences_added; //TODO: Could it be set to 'true' instead of '!' ?
+        SharedPreferences.Editor preferences_editor = shared_preferences.edit();
+        preferences_editor.putBoolean(Constants.GEOFENCES_ADDED_KEY, geofences_added);
+        preferences_editor.apply();
+
+        /* Update the UI. Adding geofences enables the Remove Geofences button, and removing
+        geofences enables the Add Geofences button. */
+        enableGeofenceButtons();
     }
 
+    /** A PendingIntent specifies an action to take in the future. It is an Intent action that you want to perform, but at a
+     * later time.
+     *
+     * By giving a PendingIntent to another application, you are
+     * granting it the right to perform the operation you have specified as if the other application was yourself. */
     private PendingIntent getGeofencePendingIntent()
     {
         if(geofence_pending_intent != null)
@@ -447,7 +409,7 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
         return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
-    public void startGeofence()
+    public void addGeofencesToList()
     {
         Geofence geofence = new Geofence.Builder()
                 /* Request ID is a string to identify this geofence inside your application. */
@@ -460,93 +422,81 @@ public class UserLocation extends AppCompatActivity implements GoogleApiClient.O
 
         geofence_list.add(geofence);
 
-
-        geofencing_request = getGeofencingRequest();
+        //geofencing_request = getGeofencingRequest();
     }
 
+    /** Builds and returns a GeofencingRequest. Specifies the list of geofences to be monitored. */
     private GeofencingRequest getGeofencingRequest()
     {
         GeofencingRequest.Builder geofencing_request = new GeofencingRequest.Builder();
         /* Specifying INITIAL_TRIGGER_ENTER tells Location services that GEOFENCE_TRANSITION_ENTER should be triggered
         if the the device is already inside the geofence. */
         geofencing_request.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+
+        /* Add the geofences to be monitored by geofencing service. */
         geofencing_request.addGeofences(geofence_list);
 
         return geofencing_request.build();
     }
 
-    public void addGeofences(View view)
+    public void addGeofencesButton(View view)
     {
         if(my_google_api_client.isConnected() == false)
         {
             Toast.makeText(this, "Not connected Google API!", Toast.LENGTH_SHORT).show();
             return;
         }
-        /* Do not use Activity.checkSelfPermission, because it works only on API 23 and above. */
-        int has_location_permissions = ContextCompat.checkSelfPermission(UserLocation.this,
-                Manifest.permission.ACCESS_FINE_LOCATION);
-
-        if(has_location_permissions != PackageManager.PERMISSION_GRANTED)
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
-            /* If User denied a permission, in the second launch, user will get a "Never ask again" option to prevent
-            application from asking this permission in the future. This case has to be handled as well.
-
-            Before calling requestPermissions, we need to check whether we should ask for permissions or show dialog like:
-            "You need to allow access to [PERMISSION] in settings."
-
-            This is done via shouldShowRequestPermissionRationale(). */
-            if(ActivityCompat.shouldShowRequestPermissionRationale(UserLocation.this,
-                    Manifest.permission.ACCESS_FINE_LOCATION) == false)
-            {
-                DialogInterface.OnClickListener ok_listener = new DialogInterface.OnClickListener()
-                {
-                 @Override
-                    public void onClick(DialogInterface dialog, int which)
-                 {
-                     ActivityCompat.requestPermissions(UserLocation.this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
-                             REQUEST_CODE_ASK_PERMISSIONS);
-                 }
-                };
-
-                String message = "You need to allow access to location.";
-                new AlertDialog.Builder(UserLocation.this).setMessage(message).setPositiveButton("OK", ok_listener)
-                        .setNegativeButton("Cancel", null).create().show();
-
-                return; //TODO: I think we should return only if user clicks 'Cancel'
-            }
-            else
-            {
-                ActivityCompat.requestPermissions(UserLocation.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        REQUEST_CODE_ASK_PERMISSIONS);
-            }
-
-            return; //TODO: Should it be here? I think if user allows permissions, we can go on.
+            LocationServices.GeofencingApi.addGeofences(my_google_api_client, getGeofencingRequest(),
+                    getGeofencePendingIntent()).setResultCallback(this);
         }
-        LocationServices.GeofencingApi.addGeofences(my_google_api_client, getGeofencingRequest(),
-                getGeofencePendingIntent()).setResultCallback(this);
+
+        try
+        {
+            LocationServices.GeofencingApi.addGeofences(my_google_api_client, getGeofencingRequest(),
+                    getGeofencePendingIntent()).setResultCallback(this); //Result processed in onResult()
+        }
+        catch(SecurityException security_exception)
+        {
+            Toast.makeText(this, security_exception.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    public void removeGeofencesButton(View view)
     {
-        /* TODO: Why this return void, not bool?!?! Should I add all logic here?
-        I would like to return a bool so my code could go on depending if it was permissions were granted or not.
-        What I think would be best, is to have a boolean value for every permission (default it would be set to false)
-        If permissions were approved, then I would set it here to true, and later check those booleans in my application. */
-
-        switch (requestCode)
+        if(my_google_api_client.isConnected() == false)
         {
-            case REQUEST_CODE_ASK_PERMISSIONS:
-                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                {
-                    Toast.makeText(getApplicationContext(), "Permission granted!!", Toast.LENGTH_SHORT).show();
-                }
-                else
-                {
-                    Toast.makeText(getApplicationContext(), "Something went wrong.", Toast.LENGTH_SHORT).show();
-                }
+            Toast.makeText(this, "Google client not connected!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try
+        {
+            LocationServices.GeofencingApi.removeGeofences(my_google_api_client, getGeofencePendingIntent())
+                    .setResultCallback(this); //Result processed in onResult()
+        }
+        catch(SecurityException security_exception)
+        {
+            Toast.makeText(this, security_exception.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
+
+    /** Ensures that only one button is enabled at any time. */
+    public void enableGeofenceButtons()
+    {
+        if(geofences_added)
+        {
+            add_geofences_button.setEnabled(false);
+            remove_geofences_button.setEnabled(true);
+        }
+        else
+        {
+            add_geofences_button.setEnabled(true);
+            remove_geofences_button.setEnabled(false);
+        }
+    }
+
 }
 
 
