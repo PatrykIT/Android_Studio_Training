@@ -51,7 +51,7 @@ import java.util.ArrayList;
 public class UserLocation extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks, LocationListener, ResultCallback<Status>
 {
-    private static final String TAG = UserLocation.class.getSimpleName();
+    private static final String TAG = UserLocation.class.getName();
 
     public GoogleApiClient my_google_api_client;
     public Location user_last_location;
