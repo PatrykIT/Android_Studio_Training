@@ -10,4 +10,19 @@
     <string name="Location_Button">Location Info</string>
     <string name="Add_Geofence_Button">Add Geofence</string>
     <string name="Remove_Geofence_Button">Remove Geofence</string>
+
+
+    <!-- Transition type strings -->
+    <string name="geofence_transition_entered">Entered</string>
+    <string name="geofence_transition_exited">Exited</string>
+    <string name="geofence_transition_unknown">Unknown Transition</string>
+
+    <string name="geofence_transition_notification_text">Click notification to return to app</string>
+
+
+
+    <!-- Error strings -->
+    <string name="geofence_transition_invalid_type">Geofence transition error: invalid transition type %1$d</string>
+
+
 </resources>

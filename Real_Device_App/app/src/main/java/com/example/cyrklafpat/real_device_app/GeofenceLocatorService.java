@@ -1,8 +1,14 @@
 package com.example.cyrklafpat.real_device_app;
 
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.content.Context;
+import android.graphics.Color;
+import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -93,7 +99,15 @@ public class GeofenceLocatorService extends IntentService
      */
     private String getTransitionString(int transition_type)
     {
-        return "";
+        switch (transition_type)
+        {
+            case Geofence.GEOFENCE_TRANSITION_ENTER:
+                return getString(R.string.geofence_transition_entered);
+            case Geofence.GEOFENCE_TRANSITION_EXIT:
+                return getString(R.string.geofence_transition_exited);
+            default:
+                return getString(R.string.geofence_transition_unknown);
+        }
     }
 
     /**
@@ -102,7 +116,32 @@ public class GeofenceLocatorService extends IntentService
      */
     private void sendNotification(String notification_details)
     {
+        Intent notification_intent = new Intent(getApplicationContext(), MainActivity.class);
 
+        /* Construct a task stack. Add the main Activity to the task stack as the parent. Push content Intent onto stack.*/
+        TaskStackBuilder stack_builder = TaskStackBuilder.create(this);
+        stack_builder.addParentStack(MainActivity.class);
+        stack_builder.addNextIntent(notification_intent);
+
+        /* Get a PendingIntent containing the entire back stack. */
+        PendingIntent notification_pending_intent = stack_builder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        /* Get a notification builder that's compatible with platform versions >= 4 */
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+
+        /* Define the notification settings. */
+        builder.setColor(Color.RED).setContentTitle(notification_details).
+                setContentText(getString(R.string.geofence_transition_notification_text))
+                .setContentIntent(notification_pending_intent);
+
+        /* Dismiss notification once the user touches it. */
+        builder.setAutoCancel(true);
+
+        /* Get an instance of the Notification manager. */
+        NotificationManager notification_manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        /* Issue the notification. */
+        notification_manager.notify(0, builder.build());
     }
 
     @Override
